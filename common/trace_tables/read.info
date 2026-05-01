@@ -1,0 +1,6 @@
+Compile		bash recompile.sh
+Run mod		sudo insmod trace_tables.ko
+list mod	lsmod
+use functions:	get_syscall_name(int i)
+		get_syscall_abi(int i)
+remove mod	rmmod trace_tables.ko

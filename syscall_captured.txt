@@ -1,0 +1,40 @@
+Top 15 hottest syscall call-sites
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+   rank |   count |             pid |    syscall |              syscall name |              ip |          offset |            comm |           image
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+      1 |    3519 |            1228 |          0 |                      read | 0x 7b3e5b114862 | 0x            0 |     apps.plugin |      unresolved
+      2 |    1763 |            1228 |        257 |                    openat | 0x 7b3e5b1145bb | 0x            0 |     apps.plugin |      unresolved
+      3 |    1763 |            1228 |          3 |                     close | 0x 7b3e5b114fe7 | 0x            0 |     apps.plugin |      unresolved
+      4 |    1754 |            1228 |          8 |                     lseek | 0x 7b3e5b11499b | 0x            0 |     apps.plugin |      unresolved
+      5 |    1172 |            1228 |        217 |                getdents64 | 0x 7b3e5b0e6647 | 0x            0 |     apps.plugin |      unresolved
+      6 |     804 |             887 |          0 |                      read | 0x 77b6d111489c | 0x            0 | PLUGINSD[nfacct |      unresolved
+      7 |     586 |            1228 |        257 |                    openat | 0x 7b3e5b119a9c | 0x            0 |     apps.plugin |      unresolved
+      8 |     586 |            1228 |          3 |                     close | 0x 7b3e5b1198eb | 0x            0 |     apps.plugin |      unresolved
+      9 |     586 |            1228 |        262 |                newfstatat | 0x 7b3e5b113dbe | 0x            0 |     apps.plugin |      unresolved
+     10 |     418 |             887 |        257 |                    openat | 0x 77b6d1114634 | 0x            0 | PLUGIN[cgroups] |      unresolved
+     11 |     418 |             887 |          3 |                     close | 0x 77b6d111500b | 0x            0 | PLUGIN[cgroups] |      unresolved
+     12 |     325 |             887 |          8 |                     lseek | 0x 77b6d111499b | 0x            0 |    PLUGIN[proc] |      unresolved
+     13 |     192 |            2036 |         47 |                   recvmsg | 0x 7a5e2dd278bf | 0x            0 |     gnome-shell |      unresolved
+     14 |     112 |            1891 |         47 |                   recvmsg | 0x 7149165278bf | 0x            0 |      VBoxClient |      unresolved
+     15 |     108 |            1228 |         89 |                  readlink | 0x 7b3e5b1160cb | 0x            0 |     apps.plugin |      unresolved
+===== snapshot end =====
+Top 15 hottest syscall call-sites
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+   rank |   count |             pid |    syscall |              syscall name |              ip |          offset |            comm |           image
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+      1 |   10111 |            2561 |         17 |                   pread64 | 0x 7b372791280f | 0x            0 | pool-tracker-mi |      unresolved
+      2 |    5279 |            1228 |          0 |                      read | 0x 7b3e5b114862 | 0x            0 |     apps.plugin |      unresolved
+      3 |    2645 |            1228 |          3 |                     close | 0x 7b3e5b114fe7 | 0x            0 |     apps.plugin |      unresolved
+      4 |    2645 |            1228 |        257 |                    openat | 0x 7b3e5b1145bb | 0x            0 |     apps.plugin |      unresolved
+      5 |    2631 |            1228 |          8 |                     lseek | 0x 7b3e5b11499b | 0x            0 |     apps.plugin |      unresolved
+      6 |    1758 |            1228 |        217 |                getdents64 | 0x 7b3e5b0e6647 | 0x            0 |     apps.plugin |      unresolved
+      7 |    1203 |             887 |          0 |                      read | 0x 77b6d111489c | 0x            0 | PLUGINSD[nfacct |      unresolved
+      8 |     879 |            1228 |          3 |                     close | 0x 7b3e5b1198eb | 0x            0 |     apps.plugin |      unresolved
+      9 |     879 |            1228 |        257 |                    openat | 0x 7b3e5b119a9c | 0x            0 |     apps.plugin |      unresolved
+     10 |     879 |            1228 |        262 |                newfstatat | 0x 7b3e5b113dbe | 0x            0 |     apps.plugin |      unresolved
+     11 |     627 |             887 |          3 |                     close | 0x 77b6d111500b | 0x            0 | PLUGIN[cgroups] |      unresolved
+     12 |     627 |             887 |        257 |                    openat | 0x 77b6d1114634 | 0x            0 | PLUGIN[cgroups] |      unresolved
+     13 |     486 |             887 |          8 |                     lseek | 0x 77b6d111499b | 0x            0 |    PLUGIN[proc] |      unresolved
+     14 |     355 |            2036 |         47 |                   recvmsg | 0x 7a5e2dd278bf | 0x            0 |     gnome-shell |      unresolved
+     15 |     172 |            1891 |         47 |                   recvmsg | 0x 7149165278bf | 0x            0 |      VBoxClient |      unresolved
+===== snapshot end =====

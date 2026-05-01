@@ -1,0 +1,357 @@
+/* Module Licence - GPL
+ * 
+ * Ondrej Hurinek
+ * !! This module was developed as part of BSc Computer Science - Individual 3rd
+ * year project !!
+ * 
+ * Interrupt tracing module - aggregation layer
+ *
+ * This module attaches probes into irq_handler_entry and irq_handler_exit tracepoints
+ * to collect required data
+ * 
+ * Data are than exposed using /proc subsystem
+ *
+ * Important:	- per CPU data structures are important for cross CPU irq validation
+ * 		- interrupt nesting is handled using stack-like array
+ */
+
+
+
+
+
+
+#include <linux/string.h>	// strcmp
+#include <linux/init.h>		// __init and __exit macros
+#include <linux/module.h>	// to be able to define as module
+#include <linux/tracepoint.h>	// tracepoint structs...
+#include <linux/ktime.h>	// get current times
+#include <linux/seq_file.h>	// seq_file into proc
+#include <linux/proc_fs.h>	// /proc
+#include <linux/smp.h>		// cpu's info - smp_processor_id() and get_cpu()/put_cpu()
+#include <linux/interrupt.h>	// for interrupts info - irqaction struct
+#include "../../common/trace_common/tp_lookup.h" // tracepoint lookup functions
+
+#define MAX_DEPTH 16		// Max depth of the nested interrupts
+#define IRQ_NUMBER 512		// Upper bound of an array to store irq numbers
+#define IRQ_PER_NUMB 16		// Interrupts per irq number (can be more than 1)
+#define CPUS_TOTAL 64		// Number of cpu's executing
+
+
+
+
+
+/* Forward functions declarations */
+static int print_irq(struct seq_file *f, void *v);
+static int bridge_print_irq(struct inode *inode, struct file *file);
+static void irq_summary_enter(void *data, int irq, struct irqaction *action);
+static void irq_summary_end(void *data, int irq, int ret);
+
+/* Tracepoint structs to work with */
+static struct tracepoint *tp_irq_enter;
+static struct tracepoint *tp_irq_exit;
+
+/* Struct to store all the informations catched from the interrupt */
+struct irq_info {
+	int irq_id;
+	char device_name[128];
+	u64 starting_time;
+	u64 total_time;
+	u64 observed_times;
+	void* dev_id;
+};
+
+/* Struct that holds data for each particular cpu
+ * When interrupt interrupts another interrupt, time of interrupted is stored
+ * and top is increased*/
+struct per_cpu_stack {
+	u64 top;				// top of the stack
+	struct irq_info cpu_stack[MAX_DEPTH];	// stack array
+};
+
+/* Struct for proc operations */
+static const struct proc_ops irq_proc_ops = {
+	.proc_open 	= bridge_print_irq,
+	.proc_read 	= seq_read,
+	.proc_lseek 	= seq_lseek,
+	.proc_release	= single_release,
+};
+
+
+
+
+
+
+/* Array to hold data of all cpus - only necessary to store per CPU
+ * since preemption is non-existent in interrupt context (interrupts
+ * execute individually per CPU */
+static struct per_cpu_stack cpus[CPUS_TOTAL];
+
+/* Array to store the results about the captured interrupts */
+static struct irq_info irq_results[CPUS_TOTAL][IRQ_NUMBER][IRQ_PER_NUMB];
+
+/* proc file subsystem struct */
+static struct proc_dir_entry *irq_proc_entry;
+
+
+
+
+
+
+/* ----------> loading and unloading kernel modules macros <---------- */
+static int __init irq_summary_init(void)
+{
+	int i;
+	int j;
+	int k;
+	int ret;
+	int num_cpus = num_possible_cpus();
+
+	pr_info("Loading the module...\n");
+
+	/* Check definition of max CPUs defined */
+	if (num_cpus > CPUS_TOTAL) {
+		pr_err("not enough CPUS_TOTAL defined");
+		return -ENOENT;
+	}
+
+	/* Initialise all top of the stack to 0 */
+	for (i = 0; i < num_cpus; i++) {
+		cpus[i].top = 0;
+	}
+
+	/* Initialise all dev_id's pointers to NULL */
+	for (j = 0; j < num_cpus; j++) {
+		for (i = 0; i < IRQ_NUMBER; i++) {
+			for (k = 0; k < IRQ_PER_NUMB; k++) {
+				irq_results[j][i][k].dev_id = NULL;
+				irq_results[j][i][k].observed_times = 0;
+			}
+		}
+	}
+
+	/* Tracepoints lookup */
+
+	tp_irq_enter = find_tracepoint_by_name("irq_handler_entry");
+
+	if (!tp_irq_enter) {
+		pr_err("tracepoint 'irq_handler_entry' not found\n");
+		return -ENOENT;
+	}
+
+	ret = tracepoint_probe_register(tp_irq_enter, irq_summary_enter, NULL);
+	if (ret) {
+		pr_err("irq_handler_entry failed: %d\n", ret);
+		return ret;
+	}
+
+	pr_info("registered probe to the tracepoint 'irq_handler_entry'\n");
+
+	tp_irq_exit = find_tracepoint_by_name("irq_handler_exit");
+	if (!tp_irq_exit) {
+		tracepoint_probe_unregister(tp_irq_enter, irq_summary_enter, NULL);
+		pr_err("tracepoint 'irq_handler_exit' not found\n");
+		return -ENOENT;
+	}
+
+	pr_info("registered probe to the tracepoint 'irq_handler_exit'\n");
+
+	ret = tracepoint_probe_register(tp_irq_exit, irq_summary_end, NULL);
+
+	if (ret) {
+		tracepoint_probe_unregister(tp_irq_enter, irq_summary_enter, NULL);
+		pr_err("irq_exit failed: %d\n", ret);
+		return ret;
+	}
+
+	/* Make array available in the correct format using /proc subsystem */
+	irq_proc_entry = proc_create("irq_trace_agg", 0444, NULL, &irq_proc_ops);
+	if (!irq_proc_entry) {
+		tracepoint_probe_unregister(tp_irq_enter, irq_summary_enter, NULL);
+		tracepoint_probe_unregister(tp_irq_exit, irq_summary_end, NULL);
+		return -ENOMEM;
+	}
+
+	pr_info("Module loaded successfully\n");
+
+	return 0;
+}
+
+static void __exit irq_summary_exit(void)
+{	
+	/* if irq_enter runs */
+	if (tp_irq_enter) {
+		tracepoint_probe_unregister(tp_irq_enter, irq_summary_enter, NULL);
+		pr_info("unregistered probe from tracepoint 'irq_handler_enter'\n");
+		tp_irq_enter = NULL;
+	}
+
+	/* if irq_exit runs */
+	if (tp_irq_exit) {
+		tracepoint_probe_unregister(tp_irq_exit, irq_summary_end, NULL);
+		pr_info("unregistered probe from tracepoint 'irq_handler_exit'\n");
+		tp_irq_exit = NULL;
+	}
+
+	/* remove interrupt proc from /proc_fs */
+	if (irq_proc_entry) {
+		proc_remove(irq_proc_entry);
+		irq_proc_entry = NULL;
+	}
+
+	/* to assure all CPUs have exited tracepoint handlers before unregister */
+	tracepoint_synchronize_unregister();
+}
+
+
+
+
+
+/* ----------> irq_enter and irq_exit probe functions <---------- */
+
+static void irq_summary_enter(void *data, int irq, struct irqaction *action)
+{
+	int current_cpu;
+	(void)data;
+
+	current_cpu = smp_processor_id();
+
+	/* check for IRQ_NUMBER overflow */
+	if (irq >= IRQ_NUMBER) {
+		pr_err("overflow in constant IRQ_NUMBER");
+		return;
+	}
+
+	/* now, check for max_depth overflow */
+	if (cpus[current_cpu].top >= MAX_DEPTH) {
+		pr_err("overflow in variable MAX_DEPTH");
+		return;
+	}
+
+	/* Temporary result */
+	struct irq_info temp = {
+		.irq_id = irq,
+		.starting_time = ktime_get_ns(),
+		.dev_id = action->dev_id,
+	};
+
+	if (action->name == NULL) {
+		strscpy(temp.device_name, "undefined", sizeof(temp.device_name));
+	} else {
+		strscpy(temp.device_name, action->name, sizeof(temp.device_name));
+	}
+
+	/* if this interrupt have interrupted 1 before at the same cpu */
+	if (cpus[current_cpu].top > 0) {
+		cpus[current_cpu].cpu_stack[cpus[current_cpu].top - 1].total_time += ktime_get_ns() - cpus[current_cpu].cpu_stack[cpus[current_cpu].top - 1].starting_time;
+	}
+
+	/* increase top of the stack in case this interrupt gets interrupted */
+	cpus[current_cpu].top++;
+	
+	/* alocate temp into cpus array */
+	cpus[current_cpu].cpu_stack[cpus[current_cpu].top - 1] = temp;
+}
+
+static void irq_summary_end(void *data, int irq, int ret)
+{
+	int current_cpu;
+	u64 current_time;
+	int i;
+	struct irq_info finished;
+
+	(void)data;
+
+	current_time = ktime_get_ns();
+	current_cpu = smp_processor_id();
+
+	/* check for IRQ_NUMBER overflow */
+	if (irq >= IRQ_NUMBER) {
+		pr_err("overflow in constant IRQ_NUMBER");
+		return;
+	}
+	
+	/* check for max_depth overflow or underflow */
+	if (cpus[current_cpu].top >= MAX_DEPTH || cpus[current_cpu].top < 1) {
+		pr_err("overflow or underfow in variable MAX_DEPTH");
+		return;
+	}
+
+	finished = cpus[current_cpu].cpu_stack[cpus[current_cpu].top - 1];
+	finished.total_time += current_time - finished.starting_time;	
+
+	/* loop through all interrupts inside interrupt number */
+	for (i = 0; i < IRQ_PER_NUMB; i++) {
+		if (irq_results[current_cpu][irq][i].dev_id == finished.dev_id) {
+			// update existing irq_result
+			irq_results[current_cpu][irq][i].observed_times++;
+			irq_results[current_cpu][irq][i].total_time += finished.total_time;
+			break;
+		} else if (irq_results[current_cpu][irq][i].dev_id == NULL) { // if result slot empty
+			// asign here from stack
+			irq_results[current_cpu][irq][i] = finished;
+			irq_results[current_cpu][irq][i].observed_times = 1;
+			break;
+		}
+	}
+
+	/* if there was an interrupted interrupt that needs to be updated */
+	if (cpus[current_cpu].top > 1) {
+		/* update starting time of the previou interrupt */
+		cpus[current_cpu].cpu_stack[cpus[current_cpu].top - 2].starting_time = current_time;
+	}
+
+	/* decrese top of the stack since all have been assigned */
+	cpus[current_cpu].top--;
+}
+
+
+
+
+
+/* -----> /proc functions <----- */
+
+/*Function to print array once /proc is called*/
+static int print_irq(struct seq_file *f, void *v)
+{
+	int i;
+	int k;
+	int j;
+	long long average_time;
+
+	/* Print all info if there is any */
+	seq_printf(f, "\n%5s | %15s | %16s | %15s | %15s | %30s\n", "CPU", "IRQ NUMBER", "OBSERVED TIMES", "AVERAGE TIME", "TOTAL TIME", "DEVICE NAME");
+	/* print dashes */
+	for (i = 0; i < 110; i++) {
+		seq_printf(f, "%s", "-");
+	}
+	/* print results */
+	for (i = 0; i < CPUS_TOTAL; i++) {
+		for (j = 0; j < IRQ_NUMBER; j++) {
+			for (k = 0; k < IRQ_PER_NUMB; k++) {
+				/* if it is not empty */
+				if (irq_results[i][j][k].observed_times != 0) {
+					average_time = irq_results[i][j][k].total_time / irq_results[i][j][k].observed_times;
+					seq_printf(f, "\n%5d | %15d | %16lld | %15lld | %15lld | %30s", i, j, irq_results[i][j][k].observed_times, average_time, irq_results[i][j][k].total_time, irq_results[i][j][k].device_name);
+				}
+			}
+		}
+	}
+	seq_printf(f, "\n");
+	return 0;
+}
+
+/*Function to bridge print_sys with the function that creates proc file
+  !!must be this signature!!*/
+static int bridge_print_irq(struct inode *inode, struct file *file)
+{
+	return single_open(file, print_irq, NULL);
+}
+
+
+
+
+
+module_init(irq_summary_init);	// register macro for module entry
+module_exit(irq_summary_exit);	// register macro for module exit
+MODULE_LICENSE("GPL");		// licence (necessary!!)
+

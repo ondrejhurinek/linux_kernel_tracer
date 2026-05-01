@@ -1,0 +1,15 @@
+run module like this:
+	-> make clean
+	-> make
+	-> sudo insmod sys...module.ko
+make sure debugfs is mounted
+	mount | grep debugfs
+if not
+	sudo mount -t debugfs non /sys/kernel/debug target_pid=777
+use it from userspace
+	echo 1 > /sys/kernel/tracing/events/sys_tracer/sys_tracer_only/enable
+
+disable
+	echo 0 | sudo tee /sys/kernel/debug/first_tp/enable
+unload
+	sudo rmmod sys...module.ko

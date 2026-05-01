@@ -1,0 +1,5 @@
+Usage:
+	sudo insmod irq_summary_mod.ko		-> loads the module as kernel module
+	lsmod					-> list all the modules (should be first at the top)
+	cat /proc/irq_trace_agg			-> shows captured table
+	sudo rmmod irq_summary_mod		-> remove module from the kernel module

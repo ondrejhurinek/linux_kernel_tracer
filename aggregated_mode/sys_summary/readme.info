@@ -1,0 +1,5 @@
+Compile		bash recompile.sh
+Run mod		sudo insmod syscall_summary.ko
+list mod	lsmod
+print results	cat /proc/sys_trace_agg
+remove mod	rmmod syscall_summary
