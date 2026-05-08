@@ -3,15 +3,23 @@ Lightweight Kernel-Level Event Tracer and Profiler for Linux
 Module Licence - GPL
 
 Developed by: Ondrej Hurinek
+
 This module was developed as part of BSc Computer Science - individual 3rd year project
+
 !Important -> instruction pointer resolution requires fix, does not work!
+
 
 Flags:
 	-m -> to define module name for laoding
+	
 	-p -> to define process id where applicable (if not applicable, it is ignored)
+	
 	-s -> to define syscall id to trace where applicable (if not applicable, it is ignored)
+	
 	-o -> to define output file to save output into
+	
 	-n -> to define number of output values for ip_summary
+	
 	-f -> to define proc_file - file to read /proc subsystem, set correctly by default but,
 	      if there is requirement to read different /proc file, use this flag to define where 
 	      exactly to read it from (for example /proc/interrupts
