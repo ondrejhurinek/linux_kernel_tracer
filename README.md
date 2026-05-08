@@ -61,9 +61,7 @@ Modules avalaible to load:
 Important: 
 
 The tracer uses the linux tracefs interface (/sys/kernel/tracing/trace_pipe) to read emitted events in event mode. It is important to note, that tracefs
-		  
 is a global subsystem, and any changes to its configuration, and / or writing to it may resolve in incorrect data. For this reason, it is recommende to
-		  
 manually clear the tracing subsystem. This can be done by disabling tracing, clearing the trace buffer and than reenabling tracing again.
 		  
 Disable tracing:
