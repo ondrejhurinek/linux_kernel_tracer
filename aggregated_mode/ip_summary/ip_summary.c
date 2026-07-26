@@ -62,14 +62,14 @@ static const struct proc_ops ip_proc_ops = {
 
 /* struct for hashtable */
 struct sys_entered {
-    	pid_t tgid;			// process id
-    	long sys_id;			// systemcall id
-    	unsigned long ip;		// instruction pointer
-    	u64 count;			// count of syscall occurences
-    	char comm[TASK_COMM_LEN];	// command name - basically the process that calls the program that calls the instruction
+	pid_t tgid;			// process id
+	long sys_id;			// systemcall id
+	unsigned long ip;		// instruction pointer
+	u64 count;			// count of syscall occurences
+	char comm[TASK_COMM_LEN];	// command name - basically the process that calls the program that calls the instruction
 	char image_name[64]; 		// exact file that called instruction
 	unsigned long offset; 		// exact ofset of the instruction
-    	struct hlist_node node;
+	struct hlist_node node;
 };
 
 /* Tracepoint structs to work with */
