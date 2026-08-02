@@ -1,169 +1,81 @@
-# Lightweight Kernel-Level Event Tracer and Profiler for Linux
+# linux_kernel_tracer
+Lightweight Kernel-Level Event Tracer and Profiler for Linux
+Module Licence - GPL
 
-A lightweight Linux kernel event tracer and profiler implemented using
-Linux kernel modules and Linux tracepoints.
+Developed by: Ondrej Hurinek
 
-The tracer monitors kernel activity by tracing **system calls (syscalls)**,
-**hardware interrupts (IRQs)**, **software interrupts (SoftIRQs)** and
-instruction pointer activity. It provides both **event-driven** and
-**aggregated profiling** modes for analysing runtime kernel behaviour.
+This module was developed as part of BSc Computer Science - individual 3rd year project
 
-Unlike higher-level tracing frameworks, this project interacts directly
-with Linux kernel tracing infrastructure to provide a deeper understanding
-of Linux kernel execution and event processing.
+!Important -> instruction pointer resolution requires fix, does not work!
 
----
 
-## Features
+Flags:
 
-- Linux kernel modules written in C
-- Linux tracepoint-based tracing
-- System call (syscall) tracing
-- Hardware interrupt (IRQ) tracing
-- Software interrupt (SoftIRQ) tracing
-- Instruction pointer profiling
-- Event-driven tracing
-- Aggregated profiling
-- Runtime filtering by process ID and syscall
-- Integration with Linux tracefs
+	-m -> to define module name for laoding
+	
+	-p -> to define process id where applicable (if not applicable, it is ignored)
+	
+	-s -> to define syscall id to trace where applicable (if not applicable, it is ignored)
+	
+	-o -> to define output file to save output into
+	
+	-n -> to define number of output values for ip_summary
+	
+	-f -> to define proc_file - file to read /proc subsystem, set correctly by default but,
+	      if there is requirement to read different /proc file, use this flag to define where 
+	      exactly to read it from (for example /proc/interrupts
 
----
+Example of usage: ./tracer.out -m ip_summary -p 5028 -s 0 -o output_file.txt -n 20 -f /proc/interrupts
 
-## Kernel Technologies
+Notes: 	- To print data in Aggregated mode, press 'p'
+	- To quit, press q or Ctrl+c
 
-- C
-- Linux Kernel Modules
-- Linux Tracepoints
-- tracefs
+Modules avalaible to load:
 
----
+	Aggregated mode: - ip_summary -> to print hottest instruction pointers
+	
+					 Avalaible flags: -p -s -n -o
+					 
+			 - irq_summary -> to print summary of traced interrupts
+			 
+					  Avalaible flags: -o
+					  
+			 - softirq_summary -> to print summary of traced software interrupts
+			 
+					      Avalaible flags: -o	
+						  
+			 - sys_summary -> to print summary of traced system calls
+			 
+	Event mode: - irq_event -> to trace events of runtime interrupts
+	
+				   Avalaible flags: -o
+				   
+		    - softirq_event -> to trace events of runtime software interrupts
+			
+				       Avalaible flags: -o
 
-## Repository Structure
+		    - syscall_event -> to trace events of runtime system calls
+			
+				       Avalaible flags: -p -s -o
 
-```
-modules/
-├── ip_summary/
-├── irq_summary/
-├── softirq_summary/
-├── sys_summary/
-├── irq_event/
-├── softirq_event/
-└── syscall_event/
+Important: 
 
-loader/
-```
-
----
-
-## Available Modules
-
-### Aggregated Profiling
-
-| Module | Description |
-|---------|-------------|
-| ip_summary | Displays hottest instruction pointers |
-| irq_summary | Displays interrupt statistics |
-| softirq_summary | Displays software interrupt statistics |
-| sys_summary | Displays system call statistics |
-
-### Event Tracing
-
-| Module | Description |
-|---------|-------------|
-| irq_event | Runtime hardware interrupt tracing |
-| softirq_event | Runtime software interrupt tracing |
-| syscall_event | Runtime system call tracing |
-
----
-
-## Building
-
-Compile the kernel modules using the provided Makefiles.
-
-Load the desired module through the supplied loader application.
-
----
-
-## Usage
-
-Example:
-
-```bash
-./tracer.out -m ip_summary -p 5028 -s 0 -o output.txt -n 20
-```
-
-Press:
-
-```
-p    Toggle aggregated output
-q    Quit
-Ctrl+C    Quit
-```
-
----
-
-## Command-Line Options
-
-| Option | Description |
-|---------|-------------|
-| `-m` | Kernel module to load |
-| `-p` | Filter by process ID |
-| `-s` | Filter by syscall number |
-| `-o` | Output file |
-| `-n` | Number of instruction pointers displayed |
-| `-f` | Alternative `/proc` file |
-
----
-
-## tracefs
-
-Event mode reads emitted kernel events through the Linux **tracefs**
-interface (`/sys/kernel/tracing/trace_pipe`).
-
-Because tracefs is a global tracing subsystem, it is recommended to clear
-the tracing buffer before starting a new tracing session.
-
+The tracer uses the linux tracefs interface (/sys/kernel/tracing/trace_pipe) to read emitted events in event mode. It is important to note, that tracefs
+is a global subsystem, and any changes to its configuration, and / or writing to it may resolve in incorrect data. For this reason, it is recommende to
+manually clear the tracing subsystem. This can be done by disabling tracing, clearing the trace buffer and than reenabling tracing again.
+		  
 Disable tracing:
-
-```bash
-echo 0 | sudo tee /sys/kernel/tracing/tracing_on
-```
-
-Disable all enabled events:
-
-```bash
-echo 0 | sudo tee /sys/kernel/tracing/events/enable
-```
-
+		  
+	echo 0 | sudo tee /sys/kernel/tracing/tracing_on
+			
+Disable currently running events:
+		  
+	echo 0 | sudo tee /sys/kernel/tracing/events/enable
+			
 Clear the trace buffer:
-
-```bash
-echo | sudo tee /sys/kernel/tracing/trace
-```
-
-Re-enable tracing:
-
-```bash
-echo 1 | sudo tee /sys/kernel/tracing/tracing_on
-```
-
----
-
-## Known Limitations
-
-- Instruction pointer symbol resolution is currently incomplete.
-
----
-
-## Future Work
-
-- Improve instruction pointer symbol resolution.
-- Support additional Linux tracepoints.
-- Extend runtime filtering.
-- Improve performance profiling capabilities.
-
----
-
-## License
-
-GPL
+		  
+			echo | sudo tee /sys/kernel/tracing/trace
+			
+		  Reenable tracing:
+		  
+			echo 1 | sudo tee /sys/kernel/tracing/tracing_on
