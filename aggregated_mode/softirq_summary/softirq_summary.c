@@ -1,9 +1,5 @@
 /* Module Licence - GPL
  * 
- * Ondrej Hurinek
- * !! This module was developed as part of BSc Computer Science - Individual 3rd
- * year project !!
- * 
  * Software interrupt tracing module - aggregation layer
  *
  * This module attaches probes into softirq_entry and softirq_exit tracepoints
@@ -14,11 +10,6 @@
  * Important:	- per CPU data structures are important, since there is a g
  * 		  guarantee having only 1 same softirq running on same CPU
  */
-
-
-
-
-
 
 #include <linux/string.h>	// strcmp
 #include <linux/init.h>		// __init and __exit macros
