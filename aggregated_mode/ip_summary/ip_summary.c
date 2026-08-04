@@ -1,9 +1,6 @@
 /* Module Licence - GPL
  * 
  * Ondrej Hurinek
- * !! This module was developed as part of BSc Computer Science - Individual 3rd
- * year project !!
- * 
  * Instruction pointer tracing module - aggregation layer
  *
  * This module attaches the probes into sys_enter and sys_exit tracepoints and
