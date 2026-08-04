@@ -155,15 +155,6 @@ echo 1 | sudo tee /sys/kernel/tracing/tracing_on
 
 ---
 
-## Future Work
-
-- Improve instruction pointer symbol resolution.
-- Support additional Linux tracepoints.
-- Extend runtime filtering.
-- Improve performance profiling capabilities.
-
----
-
 ## License
 
 GPL
