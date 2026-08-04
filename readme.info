@@ -1,8 +1,10 @@
 Module Licence - GPL
 
 Developed by: Ondrej Hurinek
-This module was developed as part of BSc Computer Science - individual 3rd year project
-!Important -> instruction pointer resolution requires fix, does not work!
+
+Known limitation
+
+Instruction pointer symbol resolution is currently incomplete.
 
 Flags:
 	-m -> to define module name for laoding
