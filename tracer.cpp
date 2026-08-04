@@ -1,3 +1,16 @@
+/*
+ * tracer.cpp
+ *
+ * User-space controller for the Linux kernel event tracer.
+ *
+ * This program loads and unloads the selected kernel module, applies
+ * optional PID and syscall filters, reads aggregated results from /proc,
+ * and streams event-based output from tracefs through trace_pipe.
+ *
+ * It also provides keyboard controls for printing aggregated output
+ * and stopping the tracer cleanly.
+ */
+
 #include <iostream>	// out, cerr
 #include <fstream>	// file I/O - trace_pipe, /proc
 #include <string>	// string operations
