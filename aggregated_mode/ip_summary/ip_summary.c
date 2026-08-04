@@ -1,6 +1,5 @@
 /* Module Licence - GPL
  * 
- * Ondrej Hurinek
  * Instruction pointer tracing module - aggregation layer
  *
  * This module attaches the probes into sys_enter and sys_exit tracepoints and
@@ -9,11 +8,6 @@
  * Data are than exposed using /proc subsystem
  *
  */
-
-
-
-
-
 
 #include <asm/unistd.h>			// __NR_syscalls
 #include <linux/module.h> 		// 
