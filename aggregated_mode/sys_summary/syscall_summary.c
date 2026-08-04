@@ -1,9 +1,5 @@
 /* Module Licence - GPL
  * 
- * Ondrej Hurinek
- * !! This module was developed as part of BSc Computer Science - Individual 3rd
- * year project !!
- * 
  * Systemcall tracing module - aggregation layer
  *
  * This module attaches probes into syscall_entry and syscall_exit tracepoints
@@ -14,11 +10,6 @@
  * Important:	- per thread hashtable used, since 1 thread can only be
  * 		  executing 1 syscall
  */
-
-
-
-
-
 
 #include <linux/init.h>		// __init and __exit macros
 #include <linux/module.h>	// to be able to define as module
