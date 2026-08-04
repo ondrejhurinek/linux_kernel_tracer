@@ -1,9 +1,5 @@
 /* Module Licence - GPL
  * 
- * Ondrej Hurinek
- * !! This module was developed as part of BSc Computer Science - Individual 3rd
- * year project !!
- * 
  * Software interrupt tracing module - aggregation layer
  *
  * This module attaches probes into softirq_entry and softirq_exit tracepoints
@@ -11,13 +7,6 @@
  * 
  * Data are than exposed using tracefs subsystem using tracepipe
  */
-
-
-
-
-
-
-
 
 #include <linux/init.h>		// __init and __exit macros
 #include <linux/module.h>	// to be able to define as module
