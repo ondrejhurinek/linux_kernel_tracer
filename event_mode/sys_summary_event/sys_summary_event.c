@@ -1,9 +1,5 @@
 /* Module Licence - GPL
  * 
- * Ondrej Hurinek
- * !! This module was developed as part of BSc Computer Science - Individual 3rd
- * year project !!
- * 
  * Interrupt tracing module - aggregation layer
  *
  * This module attaches probes into irq_handler_entry and irq_handler_exit tracepoints
@@ -14,15 +10,6 @@
  * Important:	- per CPU data structures are important for cross CPU irq validation
  * 		- interrupt nesting is handled using stack-like array
  */
-
-
-
-
-
-
-
-
-
 
 #include <linux/module.h> 	// to give me module licence function
 #include <linux/init.h> 	// init/exit macros
