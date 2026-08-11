@@ -1,6 +1,6 @@
 /* Module Licence - GPL
  * 
- * Interrupt tracing module - aggregation layer
+ * System call module - emission layer
  *
  * This module attaches probes into sys_trace_entry and sys_trace_exit tracepoints
  * to collect required data
