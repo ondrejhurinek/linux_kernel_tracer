@@ -2,7 +2,7 @@
  * 
  * Interrupt tracing module - aggregation layer
  *
- * This module attaches probes into irq_handler_entry and irq_handler_exit tracepoints
+ * This module attaches probes into sys_trace_entry and sys_trace_exit tracepoints
  * to collect required data
  * 
  * Data are than exposed using /proc subsystem
