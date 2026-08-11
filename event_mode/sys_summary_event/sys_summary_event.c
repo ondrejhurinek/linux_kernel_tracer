@@ -5,7 +5,7 @@
  * This module attaches probes into sys_trace_entry and sys_trace_exit tracepoints
  * to collect required data
  * 
- * Data are than exposed using /proc subsystem
+ * Data are than exposed using tracefs subsystem using tracepipe
  *
  * Important:	- per CPU data structures are important for cross CPU irq validation
  * 		- interrupt nesting is handled using stack-like array
