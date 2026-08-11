@@ -6,9 +6,6 @@
  * to collect required data
  * 
  * Data are than exposed using tracefs subsystem using tracepipe
- *
- * Important:	- per CPU data structures are important for cross CPU irq validation
- * 		- interrupt nesting is handled using stack-like array
  */
 
 #include <linux/module.h> 	// to give me module licence function
